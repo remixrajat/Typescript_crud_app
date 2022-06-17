@@ -23,14 +23,6 @@ router.get("/", async (req: any, res: any, next) => {
     console.log(error);
     res.status(400).json({ message: error.message });
   }
-
-  // db.query(
-  //   "select * from todos_table",
-  //   (error: any, results: any, fields: any) => {
-  //     if (error) res.status(400).json({ message: error.message });
-  //     else res.status(200).json({ data: results });
-  //   }
-  // );
 });
 
 router.post("/todo", async (req, res, next) => {
