@@ -1,46 +1,78 @@
 import { Router } from "express";
-import { Todo } from "../models/todo";
+import db from "../database/database";
 
 const router = Router();
 
-type RequestBody = { text: string };
+type RequestBody = { todo: string };
 type RequestParams = { todoId: string };
-let todos: Todo[] = [];
 
-router.get("/", (req, res, next) => {
-  res.status(200).json({ todos: todos });
+router.get("/", async (req: any, res: any, next) => {
+  db.query(
+    "select * from todos_table",
+    (error: any, results: any, fields: any) => {
+      if (error) res.status(400).json({ message: error.message });
+      else res.status(200).json({ data: results });
+    }
+  );
 });
 
 router.post("/todo", (req, res, next) => {
   const body = req.body as RequestBody;
-  const newTodo: Todo = {
-    id: new Date().toISOString(),
-    text: body.text,
-  };
+  console.log(body);
+  db.query(
+    `insert into todos_table(todo) values("${body.todo}")`,
+    (error: any, results: any, fields: any) => {
+      if (error) {
+        console.log(error);
+        return res.status(400).json({ message: error.message });
+      }
 
-  todos.push(newTodo);
-
-  res.status(201).json({ message: "Added Todo.", todo: newTodo, todos: todos });
+      res.status(200).json({ data: results });
+    }
+  );
 });
 
 router.put("/todo/:todoId", (req, res, next) => {
   const body = req.body as RequestBody;
   const params = req.params as RequestParams;
-  const tid = params.todoId;
-  const todoIndex = todos.findIndex((todoItem) => todoItem.id === tid);
-  if (todoIndex >= 0) {
-    todos[todoIndex] = { id: todos[todoIndex].id, text: body.text };
-    return res
-      .status(200)
-      .json({ message: "Successfully updated Todo.", todos: todos });
-  }
+  const tid = Number(params.todoId);
+  console.log(tid, typeof tid);
 
-  res.status(404).json({ message: "Could not find Todo for this id." });
+  db.query(
+    `select todo_id, todo from todos_table where todo_id=${tid}`,
+    (error: any, results: any, fields: any) => {
+      if (error) res.status(400).json({ message: error.message });
+      else {
+        console.log(results);
+        if (results.length > 0) {
+          db.query(
+            `update todos_table set todo="${body.todo}" where todo_id=${tid}`,
+            (error: any, results: any, fields: any) => {
+              if (error) res.status(400).json({ message: error.message });
+              else
+                res.status(200).json({
+                  message: "Successfully updated todo.",
+                  results: results,
+                });
+            }
+          );
+        }
+      }
+    }
+  );
 });
 
 router.delete("/todo/:todoId", (req, res, next) => {
   const params = req.params as RequestParams;
-  todos = todos.filter((todo) => todo.id !== params.todoId);
-  res.status(200).json({ message: "Deleted todo", todos: todos });
+  db.query(
+    `delete from todos_table where todo_id=${Number(params.todoId)}`,
+    (error: any, results: any, fields: any) => {
+      if (error) res.status(400).json({ message: error.message });
+      else
+        res
+          .status(200)
+          .json({ message: "Successfully Deleted.", data: results });
+    }
+  );
 });
 export default router;
