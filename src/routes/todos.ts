@@ -1,7 +1,7 @@
 import { Router } from "express";
 import db from "../database/database";
 import fs from "fs";
-const readline = require("readline");
+import axios from "axios";
 const router = Router();
 
 type RequestBody = { todo: string };
@@ -19,13 +19,27 @@ export const dataHandler = (sql: string) => {
 router.get("/stream", async (req: any, res: any, next) => {
   try {
     const stream = fs.createReadStream(`${__dirname}/data.txt`);
-    stream.on("data", function (chunk) {
-      console.log(chunk.toString());
-      const writableStream = fs.createWriteStream(`${__dirname}/dataWrite.txt`);
-      writableStream.write(chunk.toString());
-    });
+    stream.pipe(res);
+    // stream.on("data", function (chunk) {
+    //   console.log(chunk.toString());
+    //   const writableStream = fs.createWriteStream(`${__dirname}/dataWrite.txt`);
+    //   writableStream.write(chunk.toString());
+    // });
     // stream.pipe(res);
 
+    // res.status(200).json({ result: "Success" });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.get("/readwriteStream", async (req: any, res: any) => {
+  try {
+    let dataFromRoute = await axios.get("http://localhost:8000/stream");
+    // console.log(dataFromRoute.data);
+    const writableStream = fs.createWriteStream(`${__dirname}/dataWrite.txt`);
+    writableStream.write(dataFromRoute.data);
     res.status(200).json({ result: "Success" });
   } catch (error: any) {
     console.log(error);

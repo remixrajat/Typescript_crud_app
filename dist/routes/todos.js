@@ -16,7 +16,7 @@ exports.dataHandler = void 0;
 const express_1 = require("express");
 const database_1 = __importDefault(require("../database/database"));
 const fs_1 = __importDefault(require("fs"));
-const readline = require("readline");
+const axios_1 = __importDefault(require("axios"));
 const router = (0, express_1.Router)();
 const dataHandler = (sql) => {
     return new Promise((resolve, reject) => {
@@ -32,12 +32,26 @@ exports.dataHandler = dataHandler;
 router.get("/stream", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const stream = fs_1.default.createReadStream(`${__dirname}/data.txt`);
-        stream.on("data", function (chunk) {
-            console.log(chunk.toString());
-            const writableStream = fs_1.default.createWriteStream(`${__dirname}/dataWrite.txt`);
-            writableStream.write(chunk.toString());
-        });
+        stream.pipe(res);
+        // stream.on("data", function (chunk) {
+        //   console.log(chunk.toString());
+        //   const writableStream = fs.createWriteStream(`${__dirname}/dataWrite.txt`);
+        //   writableStream.write(chunk.toString());
+        // });
         // stream.pipe(res);
+        // res.status(200).json({ result: "Success" });
+    }
+    catch (error) {
+        console.log(error);
+        res.status(400).json({ message: error.message });
+    }
+}));
+router.get("/readwriteStream", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let dataFromRoute = yield axios_1.default.get("http://localhost:8000/stream");
+        // console.log(dataFromRoute.data);
+        const writableStream = fs_1.default.createWriteStream(`${__dirname}/dataWrite.txt`);
+        writableStream.write(dataFromRoute.data);
         res.status(200).json({ result: "Success" });
     }
     catch (error) {
