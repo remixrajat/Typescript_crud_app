@@ -19,7 +19,14 @@ export const dataHandler = (sql: string) => {
 router.get("/stream", async (req: any, res: any, next) => {
   try {
     const stream = fs.createReadStream(`${__dirname}/data.txt`);
-    stream.pipe(res);
+    stream.on("data", function (chunk) {
+      console.log(chunk.toString());
+      const writableStream = fs.createWriteStream(`${__dirname}/dataWrite.txt`);
+      writableStream.write(chunk.toString());
+    });
+    // stream.pipe(res);
+
+    res.status(200).json({ result: "Success" });
   } catch (error: any) {
     console.log(error);
     res.status(400).json({ message: error.message });

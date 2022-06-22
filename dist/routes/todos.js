@@ -32,7 +32,13 @@ exports.dataHandler = dataHandler;
 router.get("/stream", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const stream = fs_1.default.createReadStream(`${__dirname}/data.txt`);
-        stream.pipe(res);
+        stream.on("data", function (chunk) {
+            console.log(chunk.toString());
+            const writableStream = fs_1.default.createWriteStream(`${__dirname}/dataWrite.txt`);
+            writableStream.write(chunk.toString());
+        });
+        // stream.pipe(res);
+        res.status(200).json({ result: "Success" });
     }
     catch (error) {
         console.log(error);
