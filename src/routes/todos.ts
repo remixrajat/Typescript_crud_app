@@ -1,19 +1,41 @@
 import { Router } from "express";
 import db from "../database/database";
-
+import fs from "fs";
+const readline = require("readline");
 const router = Router();
 
 type RequestBody = { todo: string };
 type RequestParams = { todoId: string };
 
-const dataHandler = (sql: string) => {
+export const dataHandler = (sql: string) => {
   return new Promise((resolve, reject) => {
     db.query(sql, (err: any, result: any, fields: any) => {
-      if (err) return reject(err);
+      if (err) return reject("Wrong");
       else return resolve(result);
     });
   });
 };
+
+router.get("/stream", async (req: any, res: any, next) => {
+  try {
+    const stream = fs.createReadStream(`${__dirname}/data.txt`);
+    stream.pipe(res);
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.post("/stream", async (req: any, res: any, next) => {
+  try {
+    const writableStream = fs.createWriteStream(`${__dirname}/data.txt`);
+    writableStream.write(req.body.data);
+    res.status(200).json({ result: "Success" });
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({ message: error.message });
+  }
+});
 
 router.get("/", async (req: any, res: any, next) => {
   try {

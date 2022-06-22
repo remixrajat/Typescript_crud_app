@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
+    "test": "jest",
     "start": "nodemon dist/app.js"
   },
   "license": "MIT",
@@ -19,6 +20,9 @@
     "typescript": "^4.7.3"
   },
   "devDependencies": {
-    "nodemon": "^2.0.16"
+    "@types/jest": "^28.1.2",
+    "jest": "^28.1.1",
+    "nodemon": "^2.0.16",
+    "ts-jest": "^28.0.5"
   }
 }
