@@ -17,6 +17,8 @@ const express_1 = require("express");
 const database_1 = __importDefault(require("../database/database"));
 const fs_1 = __importDefault(require("fs"));
 const axios_1 = __importDefault(require("axios"));
+const zlib = require("zlib");
+const es = require("event-stream");
 const router = (0, express_1.Router)();
 const dataHandler = (sql) => {
     return new Promise((resolve, reject) => {
@@ -31,9 +33,7 @@ const dataHandler = (sql) => {
 exports.dataHandler = dataHandler;
 router.get("/readMultiple", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const stream = fs_1.default.createReadStream(`${__dirname}/data.json`, {
-            highWaterMark: 10,
-        });
+        const stream = fs_1.default.createReadStream(`.././node_typescript_crud/data.json`);
         stream.pipe(res);
     }
     catch (error) {
@@ -43,27 +43,65 @@ router.get("/readMultiple", (req, res, next) => __awaiter(void 0, void 0, void 0
 }));
 router.get("/writeMultiple", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let dataFromRoute = yield axios_1.default.get("http://localhost:8000/readMultiple");
-        const dataFromjson = dataFromRoute.data;
-        let i = 1;
-        let j = 0;
-        for (const data in dataFromjson) {
-            if (j < 5) {
-                const writableStream = fs_1.default.createWriteStream(`${__dirname}/email${i}.txt`, {
-                    flags: "a",
-                });
-                writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
-                j++;
-            }
-            else {
-                j = 1;
-                i++;
-                const writableStream = fs_1.default.createWriteStream(`${__dirname}/email${i}.txt`, {
-                    flags: "a",
-                });
-                writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
-            }
-        }
+        (0, axios_1.default)({
+            method: "get",
+            url: "http://localhost:8000/readMultiple",
+            responseType: "stream",
+        }).then(function (response) {
+            response.data.pipe(es.map((data) => {
+                const dataFromjson = JSON.parse(data.toString());
+                let i = 1;
+                let j = 0;
+                for (const data in dataFromjson) {
+                    if (j < 5) {
+                        const writableStream = fs_1.default.createWriteStream(`.././node_typescript_crud/email${i}.txt`, {
+                            flags: "a",
+                        });
+                        writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
+                        j++;
+                    }
+                    else {
+                        j = 1;
+                        i++;
+                        const writableStream = fs_1.default.createWriteStream(`.././node_typescript_crud/email${i}.txt`, {
+                            flags: "a",
+                        });
+                        writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
+                    }
+                }
+            }));
+        });
+        // let dataFromRoute = await axios.get("http://localhost:8000/readMultiple");
+        // dataFromRoute.data.pipe(
+        //   fs.createWriteStream(`${__dirname}/email.txt`, {
+        //     flags: "a",
+        //   })
+        // );
+        // const dataFromjson = dataFromRoute.data;
+        // let i = 1;
+        // let j = 0;
+        // for (const data in dataFromjson) {
+        //   if (j < 5) {
+        //     const writableStream = fs.createWriteStream(
+        //       `${__dirname}/email${i}.txt`,
+        //       {
+        //         flags: "a",
+        //       }
+        //     );
+        //     writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
+        //     j++;
+        //   } else {
+        //     j = 1;
+        //     i++;
+        //     const writableStream = fs.createWriteStream(
+        //       `${__dirname}/email${i}.txt`,
+        //       {
+        //         flags: "a",
+        //       }
+        //     );
+        //     writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
+        //   }
+        // }
         res.status(200).json({ result: "Success." });
     }
     catch (error) {
