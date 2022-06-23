@@ -16,9 +16,12 @@ export const dataHandler = (sql: string) => {
   });
 };
 
-router.get("/stream", async (req: any, res: any, next) => {
+router.get("/readMultiple", async (req: any, res: any, next) => {
   try {
-    const stream = fs.createReadStream(`${__dirname}/data.txt`);
+    const stream = fs.createReadStream(`${__dirname}/data.json`, {
+      highWaterMark: 10,
+    });
+
     stream.pipe(res);
   } catch (error: any) {
     console.log(error);
@@ -27,39 +30,36 @@ router.get("/stream", async (req: any, res: any, next) => {
 });
 
 router.get("/writeMultiple", async (req: any, res: any, next) => {
-  console.log("mango");
   try {
-    const stream = fs.createReadStream(`${__dirname}/data.json`);
-    stream.on("data", (chunk) => {
-      const dataFromjson = JSON.parse(chunk.toString());
-      let i = 1;
-      let j = 0;
-      for (const data in dataFromjson) {
-        if (j < 5) {
-          const writableStream = fs.createWriteStream(
-            `${__dirname}/email${i}.txt`,
-            {
-              flags: "a",
-            }
-          );
+    let dataFromRoute = await axios.get("http://localhost:8000/readMultiple");
+    const dataFromjson = dataFromRoute.data;
+    let i = 1;
+    let j = 0;
+    for (const data in dataFromjson) {
+      if (j < 5) {
+        const writableStream = fs.createWriteStream(
+          `${__dirname}/email${i}.txt`,
+          {
+            flags: "a",
+          }
+        );
 
-          writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
+        writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
 
-          j++;
-        } else {
-          j = 1;
-          i++;
-          const writableStream = fs.createWriteStream(
-            `${__dirname}/email${i}.txt`,
-            {
-              flags: "a",
-            }
-          );
-          writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
-        }
+        j++;
+      } else {
+        j = 1;
+        i++;
+        const writableStream = fs.createWriteStream(
+          `${__dirname}/email${i}.txt`,
+          {
+            flags: "a",
+          }
+        );
+        writableStream.write(`${data}: "${dataFromjson[data]}"\n`);
       }
-      res.status(200).json({ result: "Success." });
-    });
+    }
+    res.status(200).json({ result: "Success." });
   } catch (error: any) {
     console.log(error);
     res.status(400).json({ message: error.message });
@@ -79,6 +79,16 @@ router.get("/readwriteStream", async (req: any, res: any) => {
   }
 });
 
+//////////////////////////////////////////////////////////////////
+router.get("/stream", async (req: any, res: any, next) => {
+  try {
+    const stream = fs.createReadStream(`${__dirname}/data.txt`);
+    stream.pipe(res);
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).json({ message: error.message });
+  }
+});
 router.post("/stream", async (req: any, res: any, next) => {
   try {
     const writableStream = fs.createWriteStream(`${__dirname}/data.txt`);
