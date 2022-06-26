@@ -6,7 +6,7 @@ const router = Router();
 type RequestBody = { todo: string };
 type RequestParams = { todoId: string };
 
-const dataHandler = (sql: string) => {
+export const dataHandler = (sql: string) => {
   return new Promise((resolve, reject) => {
     db.query(sql, (err: any, result: any, fields: any) => {
       if (err) return reject(err);
@@ -15,7 +15,7 @@ const dataHandler = (sql: string) => {
   });
 };
 
-router.get("/", async (req: any, res: any, next) => {
+router.get("/", async (req: any, res: any, next: any) => {
   try {
     const result = await dataHandler(`select * from todos_table`);
     res.status(200).json({ data: result });
@@ -32,9 +32,7 @@ router.post("/todo", async (req, res, next) => {
     const result = await dataHandler(
       `insert into todos_table(todo) values("${body.todo}")`
     );
-    res
-      .status(201)
-      .json({ message: "Successfully added to the database", data: result });
+    res.status(201).json({ message: "Successfully added to the database", data: result });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

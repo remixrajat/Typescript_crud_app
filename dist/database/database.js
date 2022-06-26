@@ -4,15 +4,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mysql_1 = __importDefault(require("mysql"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
-console.log(process.env.PASSWORD, typeof process.env.USER);
+// import dotenv from "dotenv";
+// dotenv.config();
+console.log(process.env.DATABASE, process.env.NODE_ENV);
 var connection = mysql_1.default.createConnection({
     host: "localhost",
-    port: 3307,
-    user: process.env.USER,
+    port: 3306,
+    user: "root",
     password: process.env.PASSWORD,
-    database: "todos",
+    database: process.env.DATABASE,
 });
 connection.connect((err) => {
     if (!err) {
